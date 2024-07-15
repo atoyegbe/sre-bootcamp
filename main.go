@@ -1,12 +1,20 @@
 package main
 
 import (
+	"log"
+
 	"github.com/atoyegbe/sre-bootcamp/handlers"
+	"github.com/atoyegbe/sre-bootcamp/database"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/healthcheck"
 )
-
 func main() {
+	if err := database.Connect(); err != nil {
+		log.Fatalf("Failed to connect to database: %v", err)
+	}
+	defer database.Close()
+
+
 	app := fiber.New()
 	app.Use(healthcheck.New(healthcheck.Config{
 		LivenessProbe: func(c *fiber.Ctx) bool {
@@ -24,5 +32,8 @@ func main() {
 	v1.Put("/student/:studentId", handlers.UpdateStudent)
 	v1.Delete("/student/:studentId", handlers.DeleteStudent)
 
-	app.Listen(port)
+	if err := app.Listen(port); err != nil {
+		log.Fatalf("Failed to start server: %v", err)
+	}
+
 }
